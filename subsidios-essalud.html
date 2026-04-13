@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SubEsSalud — Gestión de Subsidios</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f0f4f8; --surface:#fff; --surface2:#f7f9fc; --surface3:#eef2f7;
+  --border:#dde3ec; --border2:#c8d2e0;
+  --accent:#2563eb; --accent2:#1d4ed8; --accent-light:#eff6ff; --accent-glow:rgba(37,99,235,.1);
+  --green:#059669; --green-bg:#ecfdf5;
+  --yellow:#d97706; --yellow-bg:#fffbeb;
+  --red:#dc2626; --red-bg:#fef2f2;
+  --purple:#7c3aed; --purple-bg:#f5f3ff;
+  --cyan:#0369a1; --cyan-bg:#e0f2fe;
+  --orange:#c2410c; --orange-bg:#fff7ed;
+  --text:#0f172a; --text2:#475569; --text3:#94a3b8;
+  --fh:'Syne',sans-serif; --fb:'DM Sans',sans-serif;
+  --r:12px; --rs:8px;
+  --sh:0 1px 3px rgba(0,0,0,.08); --shm:0 4px 16px rgba(0,0,0,.08); --shl:0 20px 40px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+.shell{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:252px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;z-index:100;box-shadow:var(--sh);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.sb-logo{padding:20px 18px 16px;background:linear-gradient(135deg,#1e3a8a,#2563eb)}
+.logo-row{font-family:var(--fh);font-size:18px;font-weight:800;color:#fff;display:flex;align-items:center;gap:9px}
+.logo-ico{width:32px;height:32px;background:rgba(255,255,255,.18);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.65);margin-top:3px;font-weight:300}
+.sb-nav{padding:12px 8px;flex:1;overflow-y:auto}
+.nav-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:8px 10px 4px}
+.nav-it{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--rs);cursor:pointer;color:var(--text2);font-size:13px;transition:all .13s;margin-bottom:1px;user-select:none}
+.nav-it:hover{background:var(--surface2);color:var(--text)}
+.nav-it.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+.nav-ic{width:19px;text-align:center;font-size:14px;flex-shrink:0}
+.sb-foot{padding:12px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
+.sb-foot strong{color:var(--text2)}
+
+/* MAIN */
+.main{margin-left:252px;flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 26px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--sh)}
+.topbar-l{display:flex;align-items:center;gap:11px}
+.topbar-title{font-family:var(--fh);font-size:16px;font-weight:700}
+.topbar-r{display:flex;gap:8px}
+.content{padding:26px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--rs);font-family:var(--fb);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .13s;white-space:nowrap;text-decoration:none}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(37,99,235,.3)}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:var(--surface);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2)}
+.btn-danger:hover{background:rgba(220,38,38,.12)}
+.btn-sm{padding:4px 9px;font-size:12px}
+.btn-icon{padding:5px 8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:14px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.stat::after{content:attr(data-icon);position:absolute;right:12px;top:12px;font-size:20px;opacity:.1}
+.stat-lbl{font-size:10.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.stat-val{font-family:var(--fh);font-size:24px;font-weight:800;color:var(--text)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.stat.green .stat-val{color:var(--green)}
+.stat.yellow .stat-val{color:var(--yellow)}
+.stat.red .stat-val{color:var(--red)}
+.stat.blue .stat-val{color:var(--accent)}
+.stat.cyan .stat-val{color:var(--cyan)}
+
+/* ALERTS */
+.alerts{margin-bottom:22px;display:flex;flex-direction:column;gap:9px}
+.alert-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);overflow:hidden}
+.alert-hdr{padding:10px 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none}
+.alert-hdr.warn{background:var(--yellow-bg);color:var(--yellow);border-bottom:1px solid rgba(217,119,6,.15)}
+.alert-hdr.danger{background:var(--red-bg);color:var(--red);border-bottom:1px solid rgba(220,38,38,.15)}
+.alert-hdr.info{background:var(--accent-light);color:var(--accent);border-bottom:1px solid rgba(37,99,235,.15)}
+.alert-tog{margin-left:auto;font-size:10px;transition:transform .2s}
+.alert-tog.open{transform:rotate(180deg)}
+.alert-list{display:none}
+.alert-list.open{display:block}
+.alert-row{padding:8px 14px;border-bottom:1px solid var(--border);font-size:12.5px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer}
+.alert-row:last-child{border-bottom:none}
+.alert-row:hover{background:var(--surface2)}
+
+/* FILTERS */
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.fi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:6px 11px;font-family:var(--fb);font-size:13px;color:var(--text);outline:none;transition:border-color .13s,box-shadow .13s;box-shadow:var(--sh)}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.fi::placeholder{color:var(--text3)}
+.fi-sel{min-width:136px;cursor:pointer}
+
+/* TABLE */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.tw-hdr{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.tw-title{font-family:var(--fh);font-weight:700;font-size:14px}
+.ts{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:8px 13px;text-align:left;font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 13px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfd}
+.td-w strong{display:block;color:var(--text);font-weight:600}
+.td-w span{font-size:11px;color:var(--text3)}
+.td-emp{color:var(--text2);font-size:12px}
+.td-mon{font-family:var(--fh);font-weight:700;color:var(--cyan);font-size:13.5px}
+.td-act{display:flex;gap:4px;white-space:nowrap}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.b-pendiente{background:var(--yellow-bg);color:var(--yellow)}
+.b-presentado{background:var(--accent-light);color:var(--accent)}
+.b-observado{background:var(--red-bg);color:var(--red)}
+.b-pagado{background:var(--green-bg);color:var(--green)}
+.b-incapacidad{background:var(--cyan-bg);color:var(--cyan)}
+.b-maternidad{background:var(--purple-bg);color:var(--purple)}
+.b-accidente_trabajo{background:var(--orange-bg);color:var(--orange)}
+.b-accidente_comun{background:#fef9c3;color:#854d0e}
+.b-canje{background:#fef3c7;color:#92400e}
+.b-expediente{background:#dbeafe;color:#1e40af}
+
+/* EMPTY */
+.empty{text-align:center;padding:56px 20px;color:var(--text3)}
+.empty-ic{font-size:40px;margin-bottom:10px}
+.empty-t{font-size:14px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.empty-s{font-size:12.5px}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:640px;max-height:93vh;overflow-y:auto;box-shadow:var(--shl);animation:mIn .2s cubic-bezier(.4,0,.2,1)}
+.modal.wide{max-width:720px}
+@keyframes mIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
+.m-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2}
+.m-title{font-family:var(--fh);font-size:15px;font-weight:700}
+.m-close{width:28px;height:28px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:15px;transition:all .13s}
+.m-close:hover{background:var(--surface3);color:var(--text)}
+.m-body{padding:22px}
+.m-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:9px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface);z-index:2}
+
+/* FORMS */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fs-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--text3);padding-bottom:7px;border-bottom:1px solid var(--border);grid-column:span 2;margin-top:4px}
+.fg-grp{display:flex;flex-direction:column;gap:4px}
+.fg-grp.s2{grid-column:span 2}
+label{font-size:12px;font-weight:600;color:var(--text2)}
+input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;font-family:var(--fb);font-size:13px;color:var(--text);outline:none;transition:border-color .13s,box-shadow .13s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+select option{background:#fff}
+.field-hint{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* CALC BOX */
+.calc-box{background:linear-gradient(135deg,var(--accent-light),#dbeafe);border:1px solid rgba(37,99,235,.2);border-radius:var(--rs);padding:14px 16px;grid-column:span 2;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.ci label{color:#1e40af;font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.ci .cv{font-family:var(--fh);font-size:17px;font-weight:800;color:var(--accent);margin-top:2px}
+.calc-note{grid-column:span 3;font-size:11px;color:#1e40af;opacity:.85;margin-top:-4px;line-height:1.6;background:rgba(37,99,235,.06);border-radius:5px;padding:6px 8px}
+
+/* STATUS PILLS */
+.sp-grp{display:flex;gap:5px;flex-wrap:wrap}
+.sp{padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);color:var(--text3);transition:all .13s;background:var(--surface);font-family:var(--fb)}
+.sp:hover{border-color:var(--border2);color:var(--text2)}
+.sp.s-pendiente{border-color:var(--yellow);color:var(--yellow);background:var(--yellow-bg)}
+.sp.s-presentado{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.sp.s-observado{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.sp.s-pagado{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+
+/* FILE SECTION */
+.files-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.file-card{border:1px solid var(--border);border-radius:var(--rs);overflow:hidden}
+.file-card-hdr{padding:8px 11px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11.5px;font-weight:600;color:var(--text2);display:flex;align-items:center;justify-content:space-between}
+.file-card-body{padding:10px}
+.file-tipo-sel{display:flex;gap:6px;margin-bottom:8px}
+.ft-opt{flex:1;padding:5px 8px;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);color:var(--text3);text-align:center;transition:all .13s;font-family:var(--fb);background:var(--surface)}
+.ft-opt:hover{border-color:var(--border2);color:var(--text2)}
+.ft-opt.sel-canje{border-color:#92400e;color:#92400e;background:#fef3c7}
+.ft-opt.sel-expediente{border-color:#1e40af;color:#1e40af;background:#dbeafe}
+.file-drop{background:var(--surface2);border:1.5px dashed var(--border2);border-radius:var(--rs);padding:14px;text-align:center;cursor:pointer;transition:all .14s;position:relative}
+.file-drop:hover{border-color:var(--accent);background:var(--accent-light)}
+.file-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;padding:0;background:none;border:none;width:100%}
+.file-drop-ic{font-size:18px;margin-bottom:3px}
+.file-drop-hint{font-size:10.5px;color:var(--text3)}
+.file-row{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 9px}
+.file-row .fn{flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
+.file-row .fsz{font-size:10px;color:var(--text3);white-space:nowrap}
+.file-row .frm{cursor:pointer;color:var(--red);font-size:13px;padding:2px;line-height:1;flex-shrink:0}
+
+/* PLAZO INFO BOX */
+.plazo-info{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:6px;font-size:11.5px;margin-top:6px}
+.plazo-info.ok{background:var(--green-bg);color:var(--green)}
+.plazo-info.warn{background:var(--yellow-bg);color:var(--yellow)}
+.plazo-info.danger{background:var(--red-bg);color:var(--red)}
+.plazo-info.neutral{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+
+/* STATUS CHANGE */
+.sc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.sc-opt{background:var(--surface2);border:2px solid var(--border);border-radius:var(--rs);padding:12px;cursor:pointer;text-align:center;transition:all .13s;font-family:var(--fb)}
+.sc-opt:hover{border-color:var(--border2)}
+.sc-opt.sel{border-color:var(--accent);background:var(--accent-light)}
+.sc-opt .sc-ic{font-size:20px;margin-bottom:4px}
+.sc-opt .sc-lbl{font-size:12.5px;font-weight:600;color:var(--text2)}
+.sc-opt.sel .sc-lbl{color:var(--accent)}
+
+/* PAGINATION */
+.pagi{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text3)}
+.pg-btns{display:flex;gap:3px}
+.pg-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;transition:all .1s}
+.pg-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pg-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* DETAIL */
+.ds{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.ds-hdr{padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)}
+.dg{display:grid;grid-template-columns:1fr 1fr}
+.df{padding:10px 14px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.df:nth-child(even){border-right:none}
+.df:nth-last-child(-n+2){border-bottom:none}
+.df label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.df .dv{font-size:13.5px;color:var(--text);margin-top:2px;font-weight:500}
+.df .dv.hi{color:var(--accent);font-family:var(--fh);font-size:17px;font-weight:800}
+
+/* INLINE ALERT */
+.inline-alert{display:flex;align-items:flex-start;gap:8px;padding:10px 13px;border-radius:var(--rs);font-size:12.5px;margin-bottom:13px;line-height:1.5}
+.ia-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(220,38,38,.2)}
+.ia-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(217,119,6,.2)}
+.ia-info{background:var(--accent-light);color:var(--accent);border:1px solid rgba(37,99,235,.2)}
+.ia-success{background:var(--green-bg);color:var(--green);border:1px solid rgba(5,150,105,.2)}
+
+/* TAGS */
+.tag-sm{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9.5px;font-weight:700;margin-left:3px;vertical-align:middle}
+.tag-pronto{background:var(--yellow-bg);color:var(--yellow)}
+.tag-venc{background:var(--red-bg);color:var(--red)}
+.tag-ok{background:var(--green-bg);color:var(--green)}
+
+/* MONTO */
+.monto-big{font-family:var(--fh);font-size:28px;font-weight:800;color:var(--accent);letter-spacing:-1px}
+
+/* CONF */
+.conf-body{padding:26px 22px;text-align:center}
+.conf-ic{font-size:38px;margin-bottom:12px}
+.conf-t{font-family:var(--fh);font-size:16px;font-weight:700;margin-bottom:6px}
+.conf-m{font-size:13px;color:var(--text2);line-height:1.5}
+
+/* TOAST */
+.toasts{position:fixed;bottom:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:9px;box-shadow:var(--shm);animation:tIn .22s ease;min-width:200px;max-width:340px}
+@keyframes tIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--accent)}
+.toast.warning{border-left:3px solid var(--yellow)}
+
+/* MISC */
+.hamburger{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:34px;height:34px;align-items:center;justify-content:center;cursor:pointer;font-size:17px;color:var(--text2)}
+.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:99}
+.loading{display:flex;align-items:center;justify-content:center;height:180px;color:var(--text3);font-size:13.5px;gap:9px}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+/* RUC LOOKUP */
+.ruc-wrap{display:flex;gap:6px;align-items:flex-start}
+.ruc-wrap input{flex:1}
+.ruc-btn{flex-shrink:0;padding:8px 11px;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);cursor:pointer;font-size:13px;font-weight:600;font-family:var(--fb);transition:all .13s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.ruc-btn:hover{background:var(--accent2)}
+.ruc-btn:disabled{opacity:.5;cursor:not-allowed}
+.ruc-status{margin-top:5px;font-size:11.5px;display:flex;align-items:center;gap:5px;min-height:18px}
+.ruc-status.ok{color:var(--green)}
+.ruc-status.err{color:var(--red)}
+.ruc-status.loading{color:var(--text3)}
+.ruc-spin{width:12px;height:12px;border:2px solid rgba(0,0,0,.1);border-top-color:var(--text3);border-radius:50%;animation:rot .6s linear infinite;flex-shrink:0}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sb-backdrop.open{display:block}
+  .hamburger{display:flex}
+  .main{margin-left:0}
+  .content{padding:13px}
+  .topbar{padding:0 13px}
+  .fg{grid-template-columns:1fr}
+  .fs-lbl,.calc-box,.fg-grp.s2{grid-column:1!important}
+  .calc-box{grid-template-columns:1fr}
+  .calc-note{grid-column:1}
+  .files-grid,.sc-grid,.dg{grid-template-columns:1fr}
+  .df{border-right:none!important}
+  .df:nth-last-child(-n+2){border-bottom:1px solid var(--border)!important}
+  .df:last-child{border-bottom:none!important}
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sb">
+  <div class="sb-logo">
+    <div class="logo-row"><div class="logo-ico">🏥</div>SubEsSalud</div>
+    <div class="logo-sub">Gestión de Subsidios EsSalud · Perú</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-lbl">Menú</div>
+    <div class="nav-it active" onclick="navTo('dashboard')" id="nav-dashboard"><span class="nav-ic">📊</span>Dashboard</div>
+    <div class="nav-it" onclick="navTo('casos')" id="nav-casos"><span class="nav-ic">📋</span>Casos</div>
+    <div class="nav-lbl" style="margin-top:8px">Datos</div>
+    <div class="nav-it" onclick="exportarData()"><span class="nav-ic">💾</span>Exportar JSON</div>
+    <div class="nav-it" onclick="document.getElementById('impFile').click()"><span class="nav-ic">📥</span>Importar JSON</div>
+    <input type="file" id="impFile" accept=".json" style="display:none" onchange="importarData(event)">
+  </nav>
+  <div class="sb-foot"><strong>SubEsSalud v4.0</strong><br>Datos y archivos en tu navegador</div>
+</aside>
+<div class="sb-backdrop" id="sbBd" onclick="closeSb()"></div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="hamburger" onclick="toggleSb()">☰</div>
+      <div class="topbar-title" id="pgTitle">Dashboard</div>
+    </div>
+    <div class="topbar-r">
+      <button class="btn btn-primary" onclick="openNew()">+ Nuevo caso</button>
+    </div>
+  </div>
+  <div class="content" id="content"><div class="loading"><div class="spin"></div>Iniciando...</div></div>
+</main>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- ═══ MODAL CASO ═══ -->
+<div class="overlay" id="mCaso">
+<div class="modal wide">
+  <div class="m-hdr">
+    <div class="m-title" id="mCasoTitle">Nuevo caso</div>
+    <div class="m-close" onclick="closeMCaso()">✕</div>
+  </div>
+  <div class="m-body">
+    <div class="fg">
+
+      <div class="fs-lbl">👤 Datos del trabajador</div>
+      <div class="fg-grp">
+        <label>RUC de la empresa</label>
+        <div class="ruc-wrap">
+          <input type="text" id="fRUC" maxlength="11" placeholder="20xxxxxxxxx"
+            oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length===11)buscarRUC()">
+          <button type="button" class="ruc-btn" id="btnRUC" onclick="buscarRUC()" title="Consultar SUNAT">
+            🔍 Consultar
+          </button>
+        </div>
+        <div class="ruc-status" id="rucStatus"></div>
+      </div>
+      <div class="fg-grp">
+        <label>Razón social *</label>
+        <input type="text" id="fEmp" placeholder="Se autocompleta al consultar RUC" oninput="calcAuto()">
+      </div>
+      <div class="fg-grp">
+        <label>Trabajador *</label>
+        <input type="text" id="fTrab" placeholder="Nombre completo" oninput="calcAuto()">
+      </div>
+      <div class="fg-grp">
+        <label>DNI *</label>
+        <input type="text" id="fDNI" maxlength="8" placeholder="12345678">
+      </div>
+      <div class="fg-grp">
+        <label>Sueldo mensual bruto (S/) *</label>
+        <input type="number" id="fSueldo" placeholder="1025.00" step="0.01" min="0" oninput="calcAuto()">
+      </div>
+      <div class="fg-grp">
+        <label>Fecha de ingreso *</label>
+        <input type="date" id="fIngreso" onchange="calcAuto()">
+      </div>
+      <div class="fg-grp">
+        <label>N° cuenta / Referencia</label>
+        <input type="text" id="fCuenta" placeholder="CCI o referencia de pago">
+      </div>
+
+      <div class="fs-lbl">🗂️ Datos del subsidio</div>
+      <div class="fg-grp">
+        <label>Tipo de subsidio *</label>
+        <select id="fTipo" onchange="calcAuto()">
+          <option value="">— Seleccionar —</option>
+          <option value="incapacidad">Incapacidad temporal</option>
+          <option value="maternidad">Maternidad (pre y post natal)</option>
+          <option value="accidente_trabajo">Accidente de trabajo</option>
+          <option value="accidente_comun">Accidente común</option>
+        </select>
+      </div>
+      <div class="fg-grp">
+        <label>Estado</label>
+        <div class="sp-grp">
+          <button type="button" class="sp s-pendiente" onclick="setStatus('pendiente')">Pendiente</button>
+          <button type="button" class="sp" onclick="setStatus('presentado')">Presentado</button>
+          <button type="button" class="sp" onclick="setStatus('observado')">Observado</button>
+          <button type="button" class="sp" onclick="setStatus('pagado')">Pagado</button>
+        </div>
+        <input type="hidden" id="fEstado" value="pendiente">
+      </div>
+      <div class="fg-grp">
+        <label>Fecha inicio descanso *</label>
+        <input type="date" id="fFini" onchange="calcAuto(); recalcPlazos()">
+      </div>
+      <div class="fg-grp">
+        <label>Fecha fin descanso *</label>
+        <input type="date" id="fFfin" onchange="calcAuto(); recalcPlazos()">
+      </div>
+      <div class="fg-grp s2">
+        <label>Notas / Observaciones</label>
+        <textarea id="fNotas" rows="2" placeholder="N° expediente, observaciones EsSalud, etc."></textarea>
+      </div>
+
+      <div class="fs-lbl">🧮 Cálculo automático (Ley 26790)</div>
+      <div class="calc-box">
+        <div class="ci"><label>Base cálculo</label><div class="cv" id="cBase">—</div></div>
+        <div class="ci"><label>Prom. diario</label><div class="cv" id="cPD">S/ 0.00</div></div>
+        <div class="ci"><label>Días totales</label><div class="cv" id="cDiasT">0</div></div>
+        <div class="ci"><label>Días empleador</label><div class="cv" id="cDiasE">0</div></div>
+        <div class="ci"><label>Días EsSalud</label><div class="cv" id="cDias">0</div></div>
+        <div class="ci"><label>Monto subsidio</label><div class="cv" id="cMonto">S/ 0.00</div></div>
+        <div class="calc-note" id="cNota">Completa los datos para ver el cálculo.</div>
+      </div>
+
+      <div class="fs-lbl">📎 Archivos adjuntos</div>
+      <div class="fg-grp s2" id="filesWrap"></div>
+
+    </div>
+  </div>
+  <div class="m-foot">
+    <button class="btn btn-ghost" onclick="closeMCaso()">Cancelar</button>
+    <button class="btn btn-primary" id="btnSave" onclick="guardarCaso()">💾 Guardar caso</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODAL DETALLE ═══ -->
+<div class="overlay" id="mDetalle">
+<div class="modal wide">
+  <div class="m-hdr">
+    <div class="m-title" id="mDetTitle">Detalle</div>
+    <div class="m-close" onclick="closeDet()">✕</div>
+  </div>
+  <div class="m-body" id="mDetBody"></div>
+  <div class="m-foot">
+    <button class="btn btn-ghost" onclick="closeDet()">Cerrar</button>
+    <button class="btn btn-ghost" id="btnDetEdit">✏️ Editar</button>
+    <button class="btn btn-primary" id="btnDetStatus">🔄 Cambiar estado</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODAL CAMBIO DE ESTADO ═══ -->
+<div class="overlay" id="mStatus">
+<div class="modal" style="max-width:500px">
+  <div class="m-hdr">
+    <div class="m-title">Cambiar estado del caso</div>
+    <div class="m-close" onclick="closeMStatus()">✕</div>
+  </div>
+  <div class="m-body" id="mStatusBody"></div>
+  <div class="m-foot">
+    <button class="btn btn-ghost" onclick="closeMStatus()">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarStatus()">✓ Confirmar cambio</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ CONFIRM ═══ -->
+<div class="overlay" id="mConfirm">
+<div class="modal" style="max-width:360px">
+  <div class="conf-body">
+    <div class="conf-ic">🗑️</div>
+    <div class="conf-t">¿Eliminar este caso?</div>
+    <div class="conf-m">Esta acción no se puede deshacer. Se eliminarán también los archivos adjuntos.</div>
+  </div>
+  <div class="m-foot">
+    <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+    <button class="btn btn-danger" id="btnConfDel">Sí, eliminar</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// INDEXEDDB
+// ══════════════════════════════════════════════════
+const DB_NAME='SubEsSaludDB4', DB_VER=1;
+let db;
+function initDB(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(DB_NAME,DB_VER);
+    r.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains('casos')) d.createObjectStore('casos',{keyPath:'id'});
+    };
+    r.onsuccess=e=>{db=e.target.result;res()};
+    r.onerror=e=>rej(e.target.error);
+  });
+}
+const dbAll=()=>new Promise((r,j)=>{const q=db.transaction('casos','readonly').objectStore('casos').getAll();q.onsuccess=()=>r(q.result);q.onerror=j});
+const dbGet=id=>new Promise((r,j)=>{const q=db.transaction('casos','readonly').objectStore('casos').get(id);q.onsuccess=()=>r(q.result);q.onerror=j});
+const dbPut=val=>new Promise((r,j)=>{const q=db.transaction('casos','readwrite').objectStore('casos').put(val);q.onsuccess=()=>r();q.onerror=j});
+const dbDel=id=>new Promise((r,j)=>{const q=db.transaction('casos','readwrite').objectStore('casos').delete(id);q.onsuccess=()=>r();q.onerror=j});
+
+// ══════════════════════════════════════════════════
+// NAV & SIDEBAR
+// ══════════════════════════════════════════════════
+function navTo(p){
+  page=p;
+  document.querySelectorAll('.nav-it').forEach(el=>el.classList.remove('active'));
+  document.getElementById('nav-'+p)?.classList.add('active');
+  document.getElementById('pgTitle').textContent={dashboard:'Dashboard',casos:'Casos'}[p]||p;
+  if(p==='dashboard') renderDash();
+  else if(p==='casos') renderCasos();
+  closeSb();
+}
+function toggleSb(){
+  document.getElementById('sb').classList.toggle('open');
+  document.getElementById('sbBd').classList.toggle('open');
+}
+function closeSb(){
+  document.getElementById('sb').classList.remove('open');
+  document.getElementById('sbBd').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let page='dashboard', editId=null, statusCaseId=null, selectedStatus=null;
+let pendFiles={CITT:{data:null,tipo:'expediente'}, DM:{data:null,tipo:'expediente'}};
+let existFiles={CITT:null, DM:null};
+let filters={empresa:'',estado:'',tipo:''}, pgNum=1;
+const PG=10;
+
+// ══════════════════════════════════════════════════
+// PLAZOS
+// ══════════════════════════════════════════════════
+/*
+  CANJE DE DM      → desde fecha INICIO descanso  + 30 días calendario
+  PRES. EXPEDIENTE → desde el día SIGUIENTE al FIN + 30 días calendario
+*/
+function calcPlazos(fechaIni, fechaFin){
+  if(!fechaIni||!fechaFin) return {canje:null, expediente:null};
+  const ini=pdate(fechaIni), fin=pdate(fechaFin);
+  // Canje: inicio + 30 días
+  const lim_canje=addDays(fechaIni,30);
+  // Expediente: día siguiente al fin + 30 días
+  const lim_exp=addDays(addDays(fechaFin,1),30); // fin+1+30 = fin+31
+  return {canje:lim_canje, expediente:lim_exp};
+}
+
+function diasRestantes(fechaLimite){
+  if(!fechaLimite) return null;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  return Math.round((pdate(fechaLimite)-hoy)/86400000);
+}
+
+function plazoStatus(dias){
+  if(dias===null) return null;
+  if(dias<0) return 'vencido';
+  if(dias<=10) return 'urgente';
+  return 'ok';
+}
+
+// ══════════════════════════════════════════════════
+// CÁLCULO EsSalud (Ley 26790)
+// ══════════════════════════════════════════════════
+function calcularSubsidio(tipo, sueldo, fechaIngreso, fechaIni, fechaFin){
+  if(!tipo||!sueldo||sueldo<=0||!fechaIngreso||!fechaIni||!fechaFin) return null;
+  const ini=pdate(fechaIni), fin=pdate(fechaFin), ingreso=pdate(fechaIngreso);
+  if(fin<ini||ini<ingreso) return null;
+
+  // Meses laborados al inicio del descanso
+  let meses=(ini.getFullYear()-ingreso.getFullYear())*12+(ini.getMonth()-ingreso.getMonth());
+  if(ini.getDate()<ingreso.getDate()) meses--;
+  meses=Math.max(1,meses);
+  const baseMeses=Math.min(meses,12);
+
+  // Promedio diario: (sueldo * baseMeses) / (baseMeses * 30) = sueldo / 30
+  // Pero mostramos la base correcta para transparencia
+  const promDiario=(sueldo*baseMeses)/(baseMeses*30);
+
+  const diasTot=Math.round((fin-ini)/86400000)+1;
+
+  let diasEmp=0, diasEsSalud=diasTot;
+  // Incapacidad y Accidente común: empleador paga primeros 20
+  if(tipo==='incapacidad'||tipo==='accidente_comun'){
+    diasEmp=Math.min(20,diasTot);
+    diasEsSalud=Math.max(0,diasTot-20);
+  }
+  // Maternidad y Accidente de trabajo: EsSalud desde día 1
+
+  const monto=promDiario*diasEsSalud;
+
+  let nota=`Fórmula: (S/ ${fmtN(sueldo)} × ${baseMeses} meses) ÷ (${baseMeses} × 30 días) = S/ ${fmtN(promDiario)}/día`;
+  if(baseMeses<12){
+    nota+=` ⟶ Prorrateo por ${baseMeses} mes(es) laborado(s).`;
+  } else {
+    nota+=` ⟶ Base completa (12 meses).`;
+  }
+  if(diasEmp>0){
+    nota+=` | Empleador: ${diasEmp} día(s). EsSalud: ${diasEsSalud} día(s) (a partir del día 21).`;
+  } else {
+    nota+=` | EsSalud cubre los ${diasEsSalud} día(s) desde el día 1.`;
+  }
+
+  return {promDiario, diasTot, diasEmp, diasEsSalud, baseMeses, monto, nota};
+}
+
+function calcAuto(){
+  const tipo=gv('fTipo'), sueldo=parseFloat(gv('fSueldo'))||0;
+  const fi=gv('fFini'), ff=gv('fFfin'), ing=gv('fIngreso');
+  const r=calcularSubsidio(tipo,sueldo,ing,fi,ff);
+  const set=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t};
+  if(!r){
+    set('cBase','—');set('cPD','S/ 0.00');set('cDiasT','0');
+    set('cDiasE','0');set('cDias','0');set('cMonto','S/ 0.00');
+    set('cNota','Completa los datos para ver el cálculo.');
+    return;
+  }
+  set('cBase',r.baseMeses<12?`${r.baseMeses} mes(es)`:'12 meses');
+  set('cPD','S/ '+fmtN(r.promDiario));
+  set('cDiasT',r.diasTot);
+  set('cDiasE',r.diasEmp);
+  set('cDias',r.diasEsSalud);
+  set('cMonto','S/ '+fmtN(r.monto));
+  set('cNota',r.nota);
+}
+
+// ══════════════════════════════════════════════════
+// ARCHIVOS
+// ══════════════════════════════════════════════════
+function recalcPlazos(){
+  // Actualiza los plazo-info en la sección de archivos
+  renderFiles();
+}
+
+function renderFiles(){
+  const w=document.getElementById('filesWrap'); if(!w) return;
+  const fi=gv('fFini'), ff=gv('fFfin');
+  const plazos=calcPlazos(fi,ff);
+  const hoy=new Date().toISOString().slice(0,10);
+
+  const mkPlazoInfo=(tipo_doc)=>{
+    const lim=tipo_doc==='canje'?plazos.canje:plazos.expediente;
+    if(!lim) return '';
+    const dias=diasRestantes(lim);
+    const st=plazoStatus(dias);
+    const txt=tipo_doc==='canje'
+      ?`Canje DM: desde inicio del descanso — límite <strong>${fdate(lim)}</strong>`
+      :`Pres. Expediente: desde día siguiente al fin — límite <strong>${fdate(lim)}</strong>`;
+    const cls=st==='vencido'?'danger':st==='urgente'?'warn':'ok';
+    const ic=st==='vencido'?'🔴':st==='urgente'?'⚠️':'✅';
+    const extra=st==='vencido'?` (vencido hace ${-dias} días)`:st==='urgente'?` (${dias} día(s) restantes)`:'';
+    return `<div class="plazo-info ${cls}">${ic} <span>${txt}${extra}</span></div>`;
+  };
+
+  let h=`<div class="files-grid">`;
+
+  ['CITT','DM'].forEach(slot=>{
+    const lbl=slot==='CITT'?'CITT':'Descanso médico';
+    const pf=pendFiles[slot], ef=existFiles[slot];
+    const tipoDoc=pf?.tipo||ef?.tipo_doc||'expediente';
+
+    h+=`<div class="file-card">
+      <div class="file-card-hdr">
+        <span>📎 ${lbl}</span>
+        ${(pf?.data||ef)?`<span class="badge ${tipoDoc==='canje'?'b-canje':'b-expediente'}">${tipoDoc==='canje'?'Canje DM':'Pres. Exp.'}</span>`:''}
+      </div>
+      <div class="file-card-body">`;
+
+    if(!pf?.data&&!ef){
+      // Sin archivo: mostrar selector de tipo + dropzone
+      h+=`<div class="file-tipo-sel">
+        <button type="button" class="ft-opt ${tipoDoc==='expediente'?'sel-expediente':''}" onclick="setFileTipo('${slot}','expediente');renderFiles()">📋 Pres. Expediente</button>
+        <button type="button" class="ft-opt ${tipoDoc==='canje'?'sel-canje':''}" onclick="setFileTipo('${slot}','canje');renderFiles()">🔄 Canje de DM</button>
+      </div>
+      <div class="file-drop">
+        <input type="file" accept=".pdf,image/*" onchange="handleFile(event,'${slot}')">
+        <div class="file-drop-ic">📎</div>
+        <div class="file-drop-hint">PDF, JPG, PNG — máx 5 MB</div>
+      </div>`;
+    } else {
+      const fileData=pf?.data||ef;
+      h+=`<div class="file-row">
+        <span>${fileData.name?.endsWith('.pdf')?'📄':'🖼️'}</span>
+        <span class="fn">${esc(fileData.name||'')}</span>
+        <span class="fsz">${fsize(fileData.size||0)}</span>
+        <span class="frm" onclick="${pf?.data?`rmPend('${slot}')`:`rmExist('${slot}')`}">✕</span>
+      </div>`;
+    }
+
+    h+=mkPlazoInfo(tipoDoc);
+    h+=`</div></div>`;
+  });
+
+  h+=`</div>`;
+  h+=`<div class="field-hint" style="margin-top:8px">💡 <strong>Canje de DM:</strong> plazo desde el inicio del descanso. <strong>Presentación de Expediente:</strong> plazo desde el día siguiente al fin del descanso. Ambos tienen 30 días calendario.</div>`;
+  w.innerHTML=h;
+}
+
+function setFileTipo(slot, tipo){
+  if(pendFiles[slot]) pendFiles[slot].tipo=tipo;
+  else pendFiles[slot]={data:null, tipo};
+}
+
+function handleFile(event, slot){
+  const file=event.target.files[0]; if(!file) return;
+  if(file.size>5*1024*1024){toast('El archivo supera 5 MB','error');return}
+  const tipo=pendFiles[slot]?.tipo||'expediente';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    pendFiles[slot]={data:{name:file.name,size:file.size,mimeType:file.type,dataURL:e.target.result},tipo};
+    renderFiles();
+  };
+  reader.readAsDataURL(file);
+}
+
+function rmPend(slot){pendFiles[slot]={data:null,tipo:'expediente'};renderFiles()}
+function rmExist(slot){existFiles[slot]=null;renderFiles()}
+
+// ══════════════════════════════════════════════════
+// MODAL CASO
+// ══════════════════════════════════════════════════
+function openNew(){
+  editId=null;
+  pendFiles={CITT:{data:null,tipo:'expediente'},DM:{data:null,tipo:'expediente'}};
+  existFiles={CITT:null,DM:null};
+  document.getElementById('mCasoTitle').textContent='Nuevo caso';
+  document.getElementById('btnSave').textContent='💾 Guardar caso';
+  resetForm(); renderFiles();
+  document.getElementById('mCaso').classList.add('open');
+}
+
+async function editarCaso(id){
+  editId=id;
+  const c=await dbGet(id); if(!c) return;
+  pendFiles={CITT:{data:null,tipo:'expediente'},DM:{data:null,tipo:'expediente'}};
+  existFiles={
+    CITT:c.archCITT||null,
+    DM:c.archDM||null
+  };
+  document.getElementById('mCasoTitle').textContent='Editar caso';
+  document.getElementById('btnSave').textContent='💾 Actualizar caso';
+  sv('fEmp',c.empresa||''); sv('fTrab',c.trabajador||''); sv('fDNI',c.dni||'');
+  sv('fSueldo',c.sueldo||''); sv('fTipo',c.tipo||'');
+  sv('fFini',c.fechaIni||''); sv('fFfin',c.fechaFin||'');
+  sv('fIngreso',c.fechaIngreso||''); sv('fCuenta',c.cuenta||'');
+  sv('fNotas',c.notas||''); sv('fRUC',c.ruc||'');
+  const rucSt=document.getElementById('rucStatus');
+  if(rucSt&&c.ruc) rucSt.innerHTML=`<span class="ok">✓ RUC ${c.ruc} cargado</span>`;
+  setStatus(c.estado||'pendiente'); calcAuto(); renderFiles();
+  document.getElementById('mCaso').classList.add('open');
+}
+
+function closeMCaso(){document.getElementById('mCaso').classList.remove('open');editId=null}
+
+function resetForm(){
+  ['fEmp','fTrab','fDNI','fSueldo','fNotas','fCuenta','fRUC'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  ['fTipo','fFini','fFfin','fIngreso'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  setStatus('pendiente');
+  const set=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t};
+  set('cBase','—');set('cPD','S/ 0.00');set('cDiasT','0');
+  set('cDiasE','0');set('cDias','0');set('cMonto','S/ 0.00');
+  set('cNota','Completa los datos para ver el cálculo.');
+}
+
+function setStatus(s){
+  sv('fEstado',s);
+  document.querySelectorAll('.sp').forEach(btn=>{
+    btn.className='sp';
+    const m=btn.getAttribute('onclick').match(/'([^']+)'/);
+    if(m&&m[1]===s) btn.classList.add('s-'+s);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// BÚSQUEDA RUC — SUNAT vía apis.net.pe
+// ══════════════════════════════════════════════════
+async function buscarRUC(){
+  const ruc=gv('fRUC').trim();
+  const stEl=document.getElementById('rucStatus');
+  const btn=document.getElementById('btnRUC');
+
+  if(!/^\d{11}$/.test(ruc)){
+    if(stEl) stEl.innerHTML=`<span class="err">⚠️ El RUC debe tener 11 dígitos</span>`;
+    return;
+  }
+
+  // Mostrar spinner
+  if(stEl) stEl.innerHTML=`<div class="ruc-spin"></div><span class="loading">Consultando SUNAT...</span>`;
+  if(btn) btn.disabled=true;
+
+  try{
+    const resp=await fetch(`https://api.apis.net.pe/v2/sunat/ruc?numero=${ruc}`,{
+      headers:{'Referer':'https://apis.net.pe'}
+    });
+
+    if(!resp.ok) throw new Error(`Error ${resp.status}`);
+    const data=await resp.json();
+
+    if(!data.razonSocial) throw new Error('RUC no encontrado');
+
+    // Autocompletar razón social
+    sv('fEmp', data.razonSocial);
+    calcAuto();
+
+    // Mostrar estado y condición
+    const estado=data.estado||'';
+    const condicion=data.condicion||'';
+    const esActivo=estado.toUpperCase().includes('ACTIVO');
+    const cls=esActivo?'ok':'err';
+    const ic=esActivo?'✓':'⚠️';
+
+    if(stEl) stEl.innerHTML=`
+      <span class="${cls}">${ic} ${data.razonSocial}</span>
+      ${estado?`<span style="color:var(--text3);font-size:10.5px">· ${estado}${condicion?' · '+condicion:''}</span>`:''}`;
+
+    if(!esActivo) toast(`Atención: contribuyente con estado "${estado}"`,'warning');
+
+  }catch(e){
+    let msg='No se pudo consultar SUNAT';
+    if(e.message.includes('Failed to fetch')||e.message.includes('NetworkError')){
+      msg='Sin conexión a internet o API no disponible';
+    } else if(e.message.includes('no encontrado')){
+      msg='RUC no encontrado en SUNAT';
+    }
+    if(stEl) stEl.innerHTML=`<span class="err">✕ ${msg}</span>`;
+    toast(msg,'error');
+  }finally{
+    if(btn) btn.disabled=false;
+  }
+}
+
+// ══════════════════════════════════════════════════
+// GUARDAR CASO
+// ══════════════════════════════════════════════════
+async function guardarCaso(){
+  const empresa=gv('fEmp').trim(), trabajador=gv('fTrab').trim();
+  const dni=gv('fDNI').trim(), sueldo=parseFloat(gv('fSueldo'))||0;
+  const tipo=gv('fTipo'), estado=gv('fEstado');
+  const fi=gv('fFini'), ff=gv('fFfin'), ing=gv('fIngreso');
+  const notas=gv('fNotas').trim(), cuenta=gv('fCuenta').trim();
+  const ruc=gv('fRUC').trim();
+
+  if(!empresa||!trabajador||!dni||!sueldo||!tipo||!fi||!ff||!ing){
+    toast('Completa todos los campos obligatorios (*)','error');return}
+  if(!/^\d{8}$/.test(dni)){toast('DNI debe tener exactamente 8 dígitos','error');return}
+  if(pdate(ff)<pdate(fi)){toast('Fecha fin no puede ser antes que fecha inicio','error');return}
+  if(pdate(fi)<pdate(ing)){toast('Fecha inicio del descanso no puede ser antes que la fecha de ingreso','error');return}
+
+  const calc=calcularSubsidio(tipo,sueldo,ing,fi,ff);
+  const orig=editId?await dbGet(editId):null;
+  const plazos=calcPlazos(fi,ff);
+
+  // Construir archivos a guardar
+  const buildArch=(slot)=>{
+    const pf=pendFiles[slot];
+    const ef=existFiles[slot];
+    if(pf?.data) return{...pf.data,tipo_doc:pf.tipo};
+    if(ef) return ef;
+    return null;
+  };
+
+  const caso={
+    id:editId||'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    empresa,trabajador,dni,ruc,sueldo,tipo,estado,
+    fechaIni:fi, fechaFin:ff, fechaIngreso:ing, notas, cuenta,
+    promDiario:calc?.promDiario||0,
+    baseMeses:calc?.baseMeses||0,
+    diasTot:calc?.diasTot||0,
+    diasEmp:calc?.diasEmp||0,
+    diasEsSalud:calc?.diasEsSalud||0,
+    montoSubsidio:calc?.monto||0,
+    archCITT:buildArch('CITT'),
+    archDM:buildArch('DM'),
+    // Plazos calculados
+    limCanje:plazos.canje,           // inicio + 30
+    limExpediente:plazos.expediente, // día sig. fin + 30
+    fechaPresentacion:orig?.fechaPresentacion||null,
+    historialEstados:orig?.historialEstados||[{
+      estado:'pendiente',
+      fecha:new Date().toISOString().slice(0,10),
+      nota:'Registro inicial'
+    }],
+    createdAt:orig?.createdAt||Date.now(),
+    updatedAt:Date.now(),
+  };
+
+  try{
+    await dbPut(caso);
+    closeMCaso();
+    toast(editId?'Caso actualizado ✓':'Caso guardado ✓','success');
+    if(page==='dashboard') renderDash(); else renderCasos();
+  }catch(e){toast('Error al guardar: '+e.message,'error')}
+}
+
+// ══════════════════════════════════════════════════
+// CAMBIO DE ESTADO
+// ══════════════════════════════════════════════════
+const ESTADOS=[
+  {val:'pendiente',lbl:'Pendiente',ic:'⏳'},
+  {val:'presentado',lbl:'Presentado',ic:'📤'},
+  {val:'observado',lbl:'Observado',ic:'⚠️'},
+  {val:'pagado',lbl:'Pagado',ic:'✅'},
+];
+
+async function openStatus(id){
+  statusCaseId=id;
+  const c=await dbGet(id); if(!c) return;
+  selectedStatus=c.estado;
+  closeDet();
+
+  const hist=c.historialEstados||[];
+  document.getElementById('mStatusBody').innerHTML=`
+    <div style="font-size:11.5px;color:var(--text2);margin-bottom:12px">
+      Caso: <strong>${esc(c.trabajador)}</strong> · <span class="badge b-${c.estado}">${eLbl(c.estado)}</span>
+    </div>
+    <div class="sc-grid" id="scGrid">
+      ${ESTADOS.map(e=>`<div class="sc-opt ${e.val===selectedStatus?'sel':''}" onclick="selSC(this,'${e.val}')">
+        <div class="sc-ic">${e.ic}</div>
+        <div class="sc-lbl">${e.lbl}</div>
+      </div>`).join('')}
+    </div>
+    <div class="fg-grp" style="margin-bottom:10px">
+      <label>Fecha del cambio</label>
+      <input type="date" id="sFecha" value="${new Date().toISOString().slice(0,10)}">
+    </div>
+    <div class="fg-grp" style="margin-bottom:14px">
+      <label>Nota (opcional)</label>
+      <input type="text" id="sNota" placeholder="Ej: Presentado en OSPE Miraflores, Exp. 2025-1234">
+    </div>
+    ${hist.length>0?`
+    <div class="divider"></div>
+    <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px">Historial</div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;max-height:180px;overflow-y:auto">
+      ${[...hist].reverse().map(h=>`<div style="padding:7px 12px;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:9px;align-items:center">
+        <span class="badge b-${h.estado}" style="flex-shrink:0">${eLbl(h.estado)}</span>
+        <span style="color:var(--text2);flex:1">${esc(h.nota||'')}</span>
+        <span style="color:var(--text3);white-space:nowrap;font-size:11px">${fdate(h.fecha)}</span>
+      </div>`).join('')}
+    </div>`:''}`;
+
+  document.getElementById('mStatus').classList.add('open');
+}
+
+function selSC(el, val){
+  selectedStatus=val;
+  document.querySelectorAll('.sc-opt').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+async function guardarStatus(){
+  if(!statusCaseId||!selectedStatus){toast('Selecciona un estado','warning');return}
+  const c=await dbGet(statusCaseId); if(!c) return;
+  const fecha=document.getElementById('sFecha')?.value||new Date().toISOString().slice(0,10);
+  const nota=document.getElementById('sNota')?.value.trim()||`Cambio a ${eLbl(selectedStatus)}`;
+  const hist=[...(c.historialEstados||[])];
+  hist.push({estado:selectedStatus,fecha,nota});
+  c.estado=selectedStatus;
+  c.fechaPresentacion=fecha;
+  c.historialEstados=hist;
+  c.updatedAt=Date.now();
+  await dbPut(c);
+  closeMStatus();
+  toast(`Estado → "${eLbl(selectedStatus)}" ✓`,'success');
+  if(page==='dashboard') renderDash(); else renderCasos();
+}
+
+function closeMStatus(){document.getElementById('mStatus').classList.remove('open');statusCaseId=null;selectedStatus=null}
+
+// ══════════════════════════════════════════════════
+// ELIMINAR
+// ══════════════════════════════════════════════════
+function confDel(id){
+  document.getElementById('btnConfDel').onclick=()=>doDel(id);
+  document.getElementById('mConfirm').classList.add('open');
+}
+async function doDel(id){await dbDel(id);closeConfirm();toast('Caso eliminado','info');if(page==='dashboard')renderDash();else renderCasos()}
+function closeConfirm(){document.getElementById('mConfirm').classList.remove('open')}
+
+// ══════════════════════════════════════════════════
+// DETALLE
+// ══════════════════════════════════════════════════
+async function verDetalle(id){
+  const c=await dbGet(id); if(!c) return;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const finDM=pdate(c.fechaFin);
+  const diffDM=Math.round((finDM-hoy)/86400000);
+  const diffTxt=diffDM>0?`${diffDM} días restantes de descanso`:diffDM===0?'Descanso termina hoy':`Descanso terminó hace ${-diffDM} días`;
+
+  // Recalcular plazos frescos (por si los datos eran de versión anterior)
+  const plazos=calcPlazos(c.fechaIni,c.fechaFin);
+  const limC=c.limCanje||plazos.canje;
+  const limE=c.limExpediente||plazos.expediente;
+
+  document.getElementById('mDetTitle').textContent=`${c.trabajador} · ${tLbl(c.tipo)}`;
+  document.getElementById('btnDetEdit').onclick=()=>{closeDet();editarCaso(id)};
+  document.getElementById('btnDetStatus').onclick=()=>openStatus(id);
+
+  // Construir alertas de plazos
+  const mkPlazoAlert=(lim,tipo_doc,tieneArch)=>{
+    if(!lim||c.estado==='pagado'||c.estado==='presentado') return '';
+    const dias=diasRestantes(lim);
+    const lbl=tipo_doc==='canje'?'Canje de DM':'Presentación de Expediente';
+    const desc=tipo_doc==='canje'
+      ?`(desde inicio del descanso ${fdate(c.fechaIni)})`
+      :`(desde el día siguiente al fin del descanso ${fdate(addDays(c.fechaFin,1))})`;
+    if(dias<0) return `<div class="inline-alert ia-danger">🔴 <div><strong>${lbl} vencido</strong> — plazo hasta ${fdate(lim)} ${desc}. Venció hace ${-dias} día(s).</div></div>`;
+    if(dias<=10) return `<div class="inline-alert ia-warn">⚠️ <div><strong>Plazo ${lbl}</strong> vence en <strong>${dias} día(s)</strong> — ${fdate(lim)} ${desc}.</div></div>`;
+    return `<div class="inline-alert ia-info">ℹ️ <div><strong>Plazo ${lbl}:</strong> hasta ${fdate(lim)} — ${dias} días restantes ${desc}.</div></div>`;
+  };
+
+  // Detectar qué tipo de trámite tiene cada archivo
+  const tipoCITT=c.archCITT?.tipo_doc||'expediente';
+  const tipoDM=c.archDM?.tipo_doc||'expediente';
+  const limCITT=tipoCITT==='canje'?limC:limE;
+  const limDMFile=tipoDM==='canje'?limC:limE;
+
+  const alertasH=mkPlazoAlert(limC,'canje',!!c.archCITT)+mkPlazoAlert(limE,'expediente',!!c.archDM);
+
+  const archH=(c.archCITT||c.archDM)?`<div class="ds"><div class="ds-hdr">📎 Archivos adjuntos</div>
+    <div style="padding:11px 14px;display:flex;gap:9px;flex-wrap:wrap;align-items:center">
+      ${c.archCITT?`<button class="btn btn-ghost btn-sm" onclick="verArch('CITT','${id}')">📄 CITT <span class="badge ${tipoCITT==='canje'?'b-canje':'b-expediente'}">${tipoCITT==='canje'?'Canje DM':'Pres. Exp.'}</span></button>`:''}
+      ${c.archDM?`<button class="btn btn-ghost btn-sm" onclick="verArch('DM','${id}')">📋 DM <span class="badge ${tipoDM==='canje'?'b-canje':'b-expediente'}">${tipoDM==='canje'?'Canje DM':'Pres. Exp.'}</span></button>`:''}
+    </div></div>`:'';
+
+  const hist=c.historialEstados||[];
+  const histH=hist.length>0?`<div class="ds"><div class="ds-hdr">📅 Historial de estados</div>
+    ${[...hist].reverse().map(h=>`<div style="padding:8px 14px;border-bottom:1px solid var(--border);font-size:12.5px;display:flex;gap:10px;align-items:center">
+      <span class="badge b-${h.estado}">${eLbl(h.estado)}</span>
+      <span style="color:var(--text2);flex:1">${esc(h.nota||'')}</span>
+      <span style="color:var(--text3);font-size:11px;white-space:nowrap">${fdate(h.fecha)}</span>
+    </div>`).join('')}</div>`:'';
+
+  document.getElementById('mDetBody').innerHTML=`
+    ${alertasH}
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <span class="monto-big">S/ ${fmtN(c.montoSubsidio)}</span>
+      <span class="badge b-${c.tipo}">${tLbl(c.tipo)}</span>
+      <span class="badge b-${c.estado}">${eLbl(c.estado)}</span>
+      ${c.fechaPresentacion?`<span style="font-size:11.5px;color:var(--text3)">Pres.: ${fdate(c.fechaPresentacion)}</span>`:''}
+      <span style="font-size:11.5px;color:var(--text3);margin-left:auto">${diffTxt}</span>
+    </div>
+
+    <div class="ds"><div class="ds-hdr">👤 Trabajador</div><div class="dg">
+      <div class="df"><label>Nombre</label><div class="dv">${esc(c.trabajador)}</div></div>
+      <div class="df"><label>DNI</label><div class="dv">${esc(c.dni)}</div></div>
+      <div class="df"><label>Empresa</label><div class="dv">${esc(c.empresa)}</div></div>
+      <div class="df"><label>RUC</label><div class="dv">${esc(c.ruc||'—')}</div></div>
+      <div class="df"><label>Sueldo mensual</label><div class="dv">S/ ${fmtN(c.sueldo)}</div></div>
+      <div class="df"><label>Fecha de ingreso</label><div class="dv">${fdate(c.fechaIngreso)}</div></div>
+      <div class="df"><label>N° Cuenta / Ref.</label><div class="dv">${esc(c.cuenta||'—')}</div></div>
+    </div></div>
+
+    <div class="ds"><div class="ds-hdr">🗂️ Período y plazos</div><div class="dg">
+      <div class="df"><label>Fecha inicio</label><div class="dv">${fdate(c.fechaIni)}</div></div>
+      <div class="df"><label>Fecha fin</label><div class="dv">${fdate(c.fechaFin)}</div></div>
+      <div class="df"><label>Días totales</label><div class="dv">${c.diasTot}</div></div>
+      <div class="df"><label>Días EsSalud</label><div class="dv">${c.diasEsSalud}${c.diasEmp>0?` <span style="color:var(--text3);font-size:11px">(empl: ${c.diasEmp})</span>`:''}</div></div>
+      <div class="df"><label>Límite canje DM</label><div class="dv" style="${diasRestantes(limC)!==null&&diasRestantes(limC)<=10?'color:var(--red);font-weight:700':''}">${fdate(limC)} <span style="font-size:11px;color:var(--text3)">(inicio + 30 días)</span></div></div>
+      <div class="df"><label>Límite pres. expediente</label><div class="dv" style="${diasRestantes(limE)!==null&&diasRestantes(limE)<=10?'color:var(--red);font-weight:700':''}">${fdate(limE)} <span style="font-size:11px;color:var(--text3)">(día sig. fin + 30 días)</span></div></div>
+    </div></div>
+
+    <div class="ds"><div class="ds-hdr">🧮 Cálculo del subsidio</div><div class="dg">
+      <div class="df"><label>Meses base</label><div class="dv">${c.baseMeses} mes(es) laborados</div></div>
+      <div class="df"><label>Promedio diario</label><div class="dv" style="color:var(--cyan)">S/ ${fmtN(c.promDiario)}</div></div>
+      <div class="df"><label>Días subsidiados</label><div class="dv">${c.diasEsSalud}</div></div>
+      <div class="df"><label>Monto EsSalud</label><div class="dv hi">S/ ${fmtN(c.montoSubsidio)}</div></div>
+    </div></div>
+
+    ${c.notas?`<div class="ds"><div class="ds-hdr">📝 Notas</div><div style="padding:11px 14px;font-size:13px;color:var(--text2);line-height:1.6">${esc(c.notas)}</div></div>`:''}
+    ${archH}
+    ${histH}
+    <div style="font-size:11px;color:var(--text3);margin-top:12px">
+      Registrado: ${new Date(c.createdAt).toLocaleString('es-PE')}
+      ${c.updatedAt&&c.updatedAt!==c.createdAt?` · Act.: ${new Date(c.updatedAt).toLocaleString('es-PE')}`:''}
+    </div>`;
+
+  document.getElementById('mDetalle').classList.add('open');
+}
+
+function closeDet(){document.getElementById('mDetalle').classList.remove('open')}
+
+async function verArch(slot,id){
+  const c=await dbGet(id); if(!c) return;
+  const a=slot==='CITT'?c.archCITT:c.archDM; if(!a?.dataURL) return;
+  const w=window.open();
+  if(a.mimeType?.includes('pdf')) w.document.write(`<iframe src="${a.dataURL}" style="position:fixed;inset:0;width:100%;height:100%;border:none"></iframe>`);
+  else w.document.write(`<img src="${a.dataURL}" style="max-width:100%;display:block;margin:auto">`);
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════
+async function renderDash(){
+  const casos=await dbAll();
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const en10=new Date(hoy); en10.setDate(en10.getDate()+10);
+
+  const s={
+    total:casos.length,
+    pendiente:casos.filter(c=>c.estado==='pendiente').length,
+    presentado:casos.filter(c=>c.estado==='presentado').length,
+    observado:casos.filter(c=>c.estado==='observado').length,
+    pagado:casos.filter(c=>c.estado==='pagado').length,
+    montoPag:casos.filter(c=>c.estado==='pagado').reduce((a,c)=>a+(c.montoSubsidio||0),0),
+    montoPC:casos.filter(c=>['pendiente','presentado'].includes(c.estado)).reduce((a,c)=>a+(c.montoSubsidio||0),0),
+  };
+
+  const isPendingActive=c=>c.estado!=='pagado'&&c.estado!=='presentado';
+
+  // Plazos canje vencidos/urgentes
+  const canjeVenc=casos.filter(c=>{
+    if(!isPendingActive(c)||!c.limCanje) return false;
+    return diasRestantes(c.limCanje)<0;
+  });
+  const canjeUrg=casos.filter(c=>{
+    if(!isPendingActive(c)||!c.limCanje) return false;
+    const d=diasRestantes(c.limCanje); return d>=0&&d<=10;
+  });
+  // Plazos expediente vencidos/urgentes
+  const expVenc=casos.filter(c=>{
+    if(!isPendingActive(c)||!c.limExpediente) return false;
+    return diasRestantes(c.limExpediente)<0;
+  });
+  const expUrg=casos.filter(c=>{
+    if(!isPendingActive(c)||!c.limExpediente) return false;
+    const d=diasRestantes(c.limExpediente); return d>=0&&d<=10;
+  });
+  // Descanso próximo a vencer
+  const dmUrg=casos.filter(c=>c.estado!=='pagado'&&pdate(c.fechaFin)>=hoy&&pdate(c.fechaFin)<=en10);
+
+  let alertH='';
+  const items=[
+    {casos:canjeVenc,cls:'danger',ic:'🔴',tit:`${canjeVenc.length} caso(s) con plazo de Canje DM VENCIDO`,fn:c=>`Venció ${fdate(c.limCanje)}`,lid:'al0',iid:'ai0'},
+    {casos:expVenc,cls:'danger',ic:'🔴',tit:`${expVenc.length} caso(s) con plazo de Expediente VENCIDO`,fn:c=>`Venció ${fdate(c.limExpediente)}`,lid:'al1',iid:'ai1'},
+    {casos:canjeUrg,cls:'warn',ic:'⚠️',tit:`${canjeUrg.length} caso(s) con Canje DM urgente (≤10 días)`,fn:c=>`Límite: ${fdate(c.limCanje)} (${diasRestantes(c.limCanje)}d)`,lid:'al2',iid:'ai2'},
+    {casos:expUrg,cls:'warn',ic:'⚠️',tit:`${expUrg.length} caso(s) con Expediente urgente (≤10 días)`,fn:c=>`Límite: ${fdate(c.limExpediente)} (${diasRestantes(c.limExpediente)}d)`,lid:'al3',iid:'ai3'},
+    {casos:dmUrg,cls:'info',ic:'📋',tit:`${dmUrg.length} caso(s) con descanso próximo a terminar`,fn:c=>`Termina: ${fdate(c.fechaFin)}`,lid:'al4',iid:'ai4'},
+  ].filter(x=>x.casos.length>0);
+
+  if(items.length){
+    alertH='<div class="alerts">'+items.map(x=>`
+      <div class="alert-card">
+        <div class="alert-hdr ${x.cls}" onclick="tAlert('${x.lid}','${x.iid}')">${x.ic} ${x.tit}<span class="alert-tog open" id="${x.iid}">▲</span></div>
+        <div class="alert-list open" id="${x.lid}">
+          ${x.casos.map(c=>`<div class="alert-row" onclick="verDetalle('${c.id}')">
+            <span><strong>${esc(c.trabajador)}</strong> · ${esc(c.empresa)}</span>
+            <span style="font-size:11.5px;white-space:nowrap">${x.fn(c)}</span>
+          </div>`).join('')}
+        </div>
+      </div>`).join('')+'</div>';
+  }
+
+  const recent=[...casos].sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);
+  document.getElementById('content').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat" data-icon="📋"><div class="stat-lbl">Total casos</div><div class="stat-val">${s.total}</div><div class="stat-sub">Todos los registros</div></div>
+      <div class="stat yellow" data-icon="⏳"><div class="stat-lbl">Pendientes</div><div class="stat-val">${s.pendiente}</div><div class="stat-sub">Por gestionar</div></div>
+      <div class="stat blue" data-icon="📤"><div class="stat-lbl">Presentados</div><div class="stat-val">${s.presentado}</div><div class="stat-sub">En EsSalud</div></div>
+      <div class="stat red" data-icon="⚠️"><div class="stat-lbl">Observados</div><div class="stat-val">${s.observado}</div><div class="stat-sub">Requieren atención</div></div>
+      <div class="stat green" data-icon="✅"><div class="stat-lbl">Pagados</div><div class="stat-val">${s.pagado}</div><div class="stat-sub">S/ ${fmtN(s.montoPag)}</div></div>
+      <div class="stat cyan" data-icon="💰"><div class="stat-lbl">Por cobrar</div><div class="stat-val">S/ ${fmtN(s.montoPC)}</div><div class="stat-sub">Pend. + Presentado</div></div>
+    </div>
+    ${alertH}
+    <div class="tw">
+      <div class="tw-hdr"><div class="tw-title">Casos recientes</div><button class="btn btn-ghost btn-sm" onclick="navTo('casos')">Ver todos →</button></div>
+      ${recent.length===0
+        ?`<div class="empty"><div class="empty-ic">📭</div><div class="empty-t">Sin casos aún</div><div class="empty-s">Haz clic en "+ Nuevo caso" para comenzar</div></div>`
+        :`<div class="ts"><table><thead><tr><th>Trabajador</th><th>Empresa</th><th>Tipo</th><th>Período</th><th>Monto</th><th>Estado</th></tr></thead>
+        <tbody>${recent.map(c=>`<tr style="cursor:pointer" onclick="verDetalle('${c.id}')">
+          <td class="td-w"><strong>${esc(c.trabajador)}</strong><span>${esc(c.dni)}</span></td>
+          <td class="td-emp">${esc(c.empresa)}</td>
+          <td><span class="badge b-${c.tipo}">${tLbl(c.tipo)}</span></td>
+          <td style="color:var(--text2);font-size:11.5px">${fdate(c.fechaIni)} – ${fdate(c.fechaFin)}</td>
+          <td class="td-mon">S/ ${fmtN(c.montoSubsidio)}</td>
+          <td><span class="badge b-${c.estado}">${eLbl(c.estado)}</span></td>
+        </tr>`).join('')}</tbody></table></div>`}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// LISTA CASOS
+// ══════════════════════════════════════════════════
+async function renderCasos(){
+  const todos=await dbAll();
+  let fil=todos.filter(c=>
+    (!filters.empresa||c.empresa.toLowerCase().includes(filters.empresa.toLowerCase()))&&
+    (!filters.estado||c.estado===filters.estado)&&
+    (!filters.tipo||c.tipo===filters.tipo)
+  ).sort((a,b)=>b.createdAt-a.createdAt);
+
+  const total=fil.length, totPg=Math.max(1,Math.ceil(total/PG));
+  if(pgNum>totPg) pgNum=1;
+  const pag=fil.slice((pgNum-1)*PG,pgNum*PG);
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const en10=new Date(hoy); en10.setDate(en10.getDate()+10);
+
+  document.getElementById('content').innerHTML=`
+    <div class="filters">
+      <input class="fi" type="text" placeholder="🔍 Empresa..." value="${esc(filters.empresa)}" oninput="filters.empresa=this.value;pgNum=1;renderCasos()">
+      <select class="fi fi-sel" onchange="filters.estado=this.value;pgNum=1;renderCasos()">
+        <option value="">Todos los estados</option>
+        ${['pendiente','presentado','observado','pagado'].map(e=>`<option value="${e}" ${filters.estado===e?'selected':''}>${eLbl(e)}</option>`).join('')}
+      </select>
+      <select class="fi fi-sel" onchange="filters.tipo=this.value;pgNum=1;renderCasos()">
+        <option value="">Todos los tipos</option>
+        ${['incapacidad','maternidad','accidente_trabajo','accidente_comun'].map(t=>`<option value="${t}" ${filters.tipo===t?'selected':''}>${tLbl(t)}</option>`).join('')}
+      </select>
+      <span style="color:var(--text3);font-size:12px">${total} caso(s)</span>
+    </div>
+    <div class="tw">
+      <div class="tw-hdr"><div class="tw-title">Lista de casos</div></div>
+      ${pag.length===0
+        ?`<div class="empty"><div class="empty-ic">🔎</div><div class="empty-t">${total===0?'Sin casos registrados':'Sin resultados'}</div><div class="empty-s">${total===0?'Usa "+ Nuevo caso"':'Prueba otros filtros'}</div></div>`
+        :`<div class="ts"><table>
+          <thead><tr><th>Trabajador</th><th>Empresa</th><th>Tipo</th><th>Inicio</th><th>Fin descanso</th><th>Lím. Canje</th><th>Lím. Exp.</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+          <tbody>${pag.map(c=>{
+            const plazos=calcPlazos(c.fechaIni,c.fechaFin);
+            const lC=c.limCanje||plazos.canje;
+            const lE=c.limExpediente||plazos.expediente;
+            const dcj=diasRestantes(lC), dex=diasRestantes(lE);
+            const fin=pdate(c.fechaFin);
+            const pvDM=fin>=hoy&&fin<=en10&&c.estado!=='pagado';
+            const isPendAct=c.estado!=='pagado'&&c.estado!=='presentado';
+            const mkLimCell=(lim,dias)=>{
+              if(!lim||!isPendAct) return `<td style="color:var(--text3);font-size:12px">${lim?fdate(lim):'—'}</td>`;
+              const cls=dias<0?'color:var(--red);font-weight:700':dias<=10?'color:var(--yellow);font-weight:700':'color:var(--text2)';
+              const tag=dias<0?`<span class="tag-sm tag-venc">Vencido</span>`:dias<=10?`<span class="tag-sm tag-pronto">${dias}d</span>`:'';
+              return `<td style="${cls};font-size:12px">${fdate(lim)}${tag}</td>`;
+            };
+            return `<tr>
+              <td class="td-w"><strong>${esc(c.trabajador)}</strong><span>${esc(c.dni)}</span></td>
+              <td class="td-emp">${esc(c.empresa)}</td>
+              <td><span class="badge b-${c.tipo}">${tLbl(c.tipo)}</span></td>
+              <td style="color:var(--text2);font-size:12px">${fdate(c.fechaIni)}</td>
+              <td style="color:var(--text2);font-size:12px">${fdate(c.fechaFin)}${pvDM?`<span class="tag-sm tag-pronto">pronto</span>`:''}</td>
+              ${mkLimCell(lC,dcj)}
+              ${mkLimCell(lE,dex)}
+              <td class="td-mon">S/ ${fmtN(c.montoSubsidio)}</td>
+              <td><span class="badge b-${c.estado}">${eLbl(c.estado)}</span></td>
+              <td><div class="td-act">
+                <button class="btn btn-ghost btn-sm btn-icon" title="Ver" onclick="verDetalle('${c.id}')">👁️</button>
+                <button class="btn btn-ghost btn-sm btn-icon" title="Editar" onclick="editarCaso('${c.id}')">✏️</button>
+                <button class="btn btn-ghost btn-sm btn-icon" title="Cambiar estado" onclick="openStatus('${c.id}')">🔄</button>
+                <button class="btn btn-danger btn-sm btn-icon" title="Eliminar" onclick="confDel('${c.id}')">🗑️</button>
+              </div></td>
+            </tr>`;
+          }).join('')}</tbody></table></div>
+          <div class="pagi">
+            <span>Mostrando ${(pgNum-1)*PG+1}–${Math.min(pgNum*PG,total)} de ${total}</span>
+            <div class="pg-btns">
+              <div class="pg-btn" onclick="chPg(${pgNum-1})">‹</div>
+              ${Array.from({length:totPg},(_,i)=>i+1).map(p=>`<div class="pg-btn ${p===pgNum?'active':''}" onclick="chPg(${p})">${p}</div>`).join('')}
+              <div class="pg-btn" onclick="chPg(${pgNum+1})">›</div>
+            </div>
+          </div>`}
+    </div>`;
+}
+
+function chPg(p){if(p<1)return;pgNum=p;renderCasos()}
+function tAlert(lid,iid){document.getElementById(lid)?.classList.toggle('open');document.getElementById(iid)?.classList.toggle('open')}
+
+// ══════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ══════════════════════════════════════════════════
+async function exportarData(){
+  const casos=await dbAll();
+  // Exportar sin dataURL para aligerar (metadata sí, binarios no)
+  const exp=casos.map(c=>({...c,
+    archCITT:c.archCITT?{...c.archCITT,dataURL:'[archivo no incluido en export JSON]'}:null,
+    archDM:c.archDM?{...c.archDM,dataURL:'[archivo no incluido en export JSON]'}:null,
+  }));
+  const blob=new Blob([JSON.stringify({version:4,exportedAt:new Date().toISOString(),casos:exp},null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=`subesalud-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  toast('Datos exportados ✓ (archivos adjuntos no incluidos)','success');
+}
+
+async function importarData(e){
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    const data=JSON.parse(await f.text());
+    if(!Array.isArray(data.casos)) throw new Error('Formato inválido');
+    let n=0;
+    for(const c of data.casos){if(c.id&&c.trabajador){await dbPut(c);n++;}}
+    toast(`${n} caso(s) importados ✓`,'success');
+    if(page==='dashboard') renderDash(); else renderCasos();
+  }catch(err){toast('Error al importar: '+err.message,'error')}
+  e.target.value='';
+}
+
+// ══════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════
+function toast(msg,type='info'){
+  const ic={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${ic[type]}</span><span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),4200);
+}
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function gv(id){return document.getElementById(id)?.value||''}
+function sv(id,val){const e=document.getElementById(id);if(e)e.value=val}
+function pdate(s){
+  if(!s)return new Date(0);
+  // Soporta tanto 'YYYY-MM-DD' como Date
+  if(typeof s!=='string') return s;
+  const[y,m,d]=s.split('-');
+  const dt=new Date(+y,+m-1,+d); dt.setHours(0,0,0,0); return dt;
+}
+function fdate(s){if(!s)return '—';const[y,m,d]=String(s).split('-');return`${d}/${m}/${y}`}
+function fmtN(n){return Number(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fsize(b){if(!b)return'';if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB'}
+function addDays(s,d){
+  const dt=pdate(s); dt.setDate(dt.getDate()+d);
+  return dt.toISOString().slice(0,10);
+}
+function tLbl(t){return{incapacidad:'Incapacidad',maternidad:'Maternidad',accidente_trabajo:'Acc. Trabajo',accidente_comun:'Acc. Común'}[t]||t||'—'}
+function eLbl(e){return{pendiente:'Pendiente',presentado:'Presentado',observado:'Observado',pagado:'Pagado'}[e]||e||'—'}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+initDB().then(()=>navTo('dashboard')).catch(e=>{
+  document.getElementById('content').innerHTML=`<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-t">Error al iniciar</div><div class="empty-s">${e.message}</div></div>`;
+});
+</script>
+</body>
+</html>
