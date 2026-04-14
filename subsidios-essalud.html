@@ -1043,43 +1043,51 @@ async function buscarRUC(){
     return;
   }
 
-  // Mostrar spinner
   if(stEl) stEl.innerHTML=`<div class="ruc-spin"></div><span class="loading">Consultando SUNAT...</span>`;
   if(btn) btn.disabled=true;
 
+  // Intentar con apis.net.pe (con token)
+  const APIS_TOKEN='sk_14671.ZvRDvwaOfR39OyDwHj0mZ24S3oYsEBhr';
+
   try{
     const resp=await fetch(`https://api.apis.net.pe/v2/sunat/ruc?numero=${ruc}`,{
-      headers:{'Referer':'https://apis.net.pe'}
+      headers:{
+        'Authorization':'Bearer '+APIS_TOKEN,
+        'Accept':'application/json'
+      }
     });
 
-    if(!resp.ok) throw new Error(`Error ${resp.status}`);
+    if(resp.status===404) throw new Error('ruc_not_found');
+    if(!resp.ok) throw new Error(`http_${resp.status}`);
+
     const data=await resp.json();
+    if(!data.razonSocial) throw new Error('ruc_not_found');
 
-    if(!data.razonSocial) throw new Error('RUC no encontrado');
-
-    // Autocompletar razón social
     sv('fEmp', data.razonSocial);
     calcAuto();
 
-    // Mostrar estado y condición
-    const estado=data.estado||'';
+    const estado=(data.estado||'').toUpperCase();
     const condicion=data.condicion||'';
-    const esActivo=estado.toUpperCase().includes('ACTIVO');
+    const esActivo=estado.includes('ACTIVO');
     const cls=esActivo?'ok':'err';
     const ic=esActivo?'✓':'⚠️';
 
     if(stEl) stEl.innerHTML=`
-      <span class="${cls}">${ic} ${data.razonSocial}</span>
-      ${estado?`<span style="color:var(--text3);font-size:10.5px">· ${estado}${condicion?' · '+condicion:''}</span>`:''}`;
+      <span class="${cls}">${ic} ${esc(data.razonSocial)}</span>
+      <span style="color:var(--text3);font-size:10.5px">· ${data.estado||''}${condicion?' · '+condicion:''}</span>`;
 
-    if(!esActivo) toast(`Atención: contribuyente con estado "${estado}"`,'warning');
+    if(!esActivo) toast(`Atención: contribuyente con estado "${data.estado}"`,'warning');
 
   }catch(e){
     let msg='No se pudo consultar SUNAT';
-    if(e.message.includes('Failed to fetch')||e.message.includes('NetworkError')){
-      msg='Sin conexión a internet o API no disponible';
-    } else if(e.message.includes('no encontrado')){
+    if(e.message==='ruc_not_found'){
       msg='RUC no encontrado en SUNAT';
+    } else if(e.message.includes('Failed to fetch')||e.message.includes('NetworkError')||e.message.includes('Load failed')){
+      msg='Sin conexión a internet';
+    } else if(e.message.includes('http_401')||e.message.includes('http_403')){
+      msg='Token de consulta inválido o expirado';
+    } else if(e.message.includes('http_429')){
+      msg='Límite de consultas alcanzado, intenta más tarde';
     }
     if(stEl) stEl.innerHTML=`<span class="err">✕ ${msg}</span>`;
     toast(msg,'error');
