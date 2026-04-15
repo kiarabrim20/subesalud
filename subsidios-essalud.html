@@ -512,8 +512,8 @@ select option{background:#fff}
 
 
 <!-- GOOGLE APIS -->
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" onload="onGapiLoad()"></script>
+<script src="https://accounts.google.com/gsi/client" onload="onGsiLoad()" defer></script>
 <script>
 // ══════════════════════════════════════════════════
 // INDEXEDDB
@@ -576,7 +576,20 @@ let cfg={};
 function loadCfg(){try{cfg=JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}catch{cfg={}}}
 function saveCfg(){localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}
 
-function initGapi(){
+// Flags para saber cuándo cargaron los scripts externos
+let gapiLoaded=false, gsiLoaded=false;
+
+function onGapiLoad(){
+  gapiLoaded=true;
+  tryInitDrive();
+}
+function onGsiLoad(){
+  gsiLoaded=true;
+  tryInitDrive();
+}
+
+function tryInitDrive(){
+  if(!gapiLoaded||!gsiLoaded) return; // esperar que ambos carguen
   gapi.load('client', async ()=>{
     try{
       await gapi.client.init({discoveryDocs: DISC_DOCS});
@@ -592,8 +605,14 @@ function initGapi(){
         gapi.client.setToken({access_token:driveToken});
         await verifyDrive();
       }
-    }catch(e){console.warn('GAPI init:',e)}
+    }catch(e){console.warn('GAPI init error:',e)}
   });
+}
+
+function initGapi(){
+  // Ya no se usa directamente — tryInitDrive lo maneja
+  // Se mantiene por compatibilidad
+  if(gapiLoaded&&gsiLoaded) tryInitDrive();
 }
 
 async function handleDriveToken(resp){
@@ -635,21 +654,33 @@ async function getOrCreateFolder(){
 }
 
 async function toggleDriveAuth(){
-  if(!gapiReady){
-    toast('Iniciando Google...','info');
-    initGapi();
-    setTimeout(()=>{if(gapiReady&&tokenClient)tokenClient.requestAccessToken({prompt:'consent'})},2000);
-    return;
-  }
   if(driveConn){
+    // Desconectar
     try{google.accounts.oauth2.revoke(driveToken,()=>{})}catch{}
-    driveToken=null;driveConn=false;driveUser='';
-    cfg.token=null;cfg.tokenExp=null;saveCfg();
+    driveToken=null;driveConn=false;driveUser='';driveFolderId=null;
+    cfg.token=null;cfg.tokenExp=null;cfg.folderId=null;saveCfg();
     updateDriveUI();
     toast('Desconectado de Google Drive','info');
     if(page==='configuracion') renderConfiguracion();
-  }else{
-    tokenClient.requestAccessToken({prompt:''});
+    return;
+  }
+
+  if(!gapiReady||!tokenClient){
+    // Scripts aún no listos
+    if(!gapiLoaded||!gsiLoaded){
+      toast('Cargando Google APIs, espera unos segundos e intenta de nuevo...','warning');
+    }else{
+      toast('Iniciando autenticación, intenta de nuevo en un momento...','info');
+      tryInitDrive();
+    }
+    return;
+  }
+
+  // Conectar
+  try{
+    tokenClient.requestAccessToken({prompt:'select_account'});
+  }catch(e){
+    toast('Error al abrir ventana de Google: '+e.message,'error');
   }
 }
 
@@ -1600,9 +1631,8 @@ function eLbl(e){return{pendiente:'Pendiente',presentado:'Presentado',observado:
 async function init(){
   loadCfg();
   await initDB();
-  // Iniciar GAPI si los scripts ya cargaron
-  if(typeof gapi !== 'undefined') initGapi();
-  else window.addEventListener('load', ()=>{ if(typeof gapi!=='undefined') initGapi(); });
+  // Drive se inicia automáticamente vía onGapiLoad() y onGsiLoad()
+  // cuando los scripts externos terminan de cargar
   navTo('dashboard');
 }
 init().catch(e=>{
