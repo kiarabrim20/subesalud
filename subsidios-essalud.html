@@ -313,6 +313,14 @@ select option{background:#fff}
   .stats-grid{grid-template-columns:1fr 1fr}
 }
 </style>
+  <!-- GOOGLE APIS — cargados en head para disponibilidad temprana -->
+  <script>
+    // Callbacks que serán llamados cuando los scripts de Google carguen
+    window.onGapiLoad = function(){ window._gapiLoaded=true; window._tryInitDrive&&window._tryInitDrive(); }
+    window.onGsiLoad  = function(){ window._gsiLoaded=true;  window._tryInitDrive&&window._tryInitDrive(); }
+  </script>
+  <script src="https://apis.google.com/js/api.js" onload="onGapiLoad()" async></script>
+  <script src="https://accounts.google.com/gsi/client" onload="onGsiLoad()" async></script>
 </head>
 <body>
 <div class="shell">
@@ -511,9 +519,6 @@ select option{background:#fff}
 </div>
 
 
-<!-- GOOGLE APIS -->
-<script src="https://apis.google.com/js/api.js" onload="onGapiLoad()"></script>
-<script src="https://accounts.google.com/gsi/client" onload="onGsiLoad()" defer></script>
 <script>
 // ══════════════════════════════════════════════════
 // INDEXEDDB
@@ -576,20 +581,10 @@ let cfg={};
 function loadCfg(){try{cfg=JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}catch{cfg={}}}
 function saveCfg(){localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}
 
-// Flags para saber cuándo cargaron los scripts externos
-let gapiLoaded=false, gsiLoaded=false;
-
-function onGapiLoad(){
-  gapiLoaded=true;
-  tryInitDrive();
-}
-function onGsiLoad(){
-  gsiLoaded=true;
-  tryInitDrive();
-}
-
+// Drive init — usa flags en window para coordinar con scripts del head
 function tryInitDrive(){
-  if(!gapiLoaded||!gsiLoaded) return; // esperar que ambos carguen
+  if(!window._gapiLoaded||!window._gsiLoaded) return;
+  if(gapiReady) return; // ya inicializado
   gapi.load('client', async ()=>{
     try{
       await gapi.client.init({discoveryDocs: DISC_DOCS});
@@ -599,7 +594,7 @@ function tryInitDrive(){
         scope: DRIVE_SCOPES,
         callback: handleDriveToken
       });
-      // Restaurar token guardado
+      // Restaurar token guardado si existe y no expiró
       if(cfg.token && cfg.tokenExp && Date.now() < cfg.tokenExp){
         driveToken=cfg.token;
         gapi.client.setToken({access_token:driveToken});
@@ -610,9 +605,9 @@ function tryInitDrive(){
 }
 
 function initGapi(){
-  // Ya no se usa directamente — tryInitDrive lo maneja
-  // Se mantiene por compatibilidad
-  if(gapiLoaded&&gsiLoaded) tryInitDrive();
+  // Registrar tryInitDrive como callback global y llamar si ya cargaron
+  window._tryInitDrive = tryInitDrive;
+  if(window._gapiLoaded && window._gsiLoaded) tryInitDrive();
 }
 
 async function handleDriveToken(resp){
@@ -666,11 +661,12 @@ async function toggleDriveAuth(){
   }
 
   if(!gapiReady||!tokenClient){
-    // Scripts aún no listos
-    if(!gapiLoaded||!gsiLoaded){
-      toast('Cargando Google APIs, espera unos segundos e intenta de nuevo...','warning');
+    if(!window._gapiLoaded||!window._gsiLoaded){
+      toast('Cargando Google APIs, espera 5 segundos e intenta de nuevo...','warning');
+      // Intentar forzar carga
+      window._tryInitDrive = tryInitDrive;
     }else{
-      toast('Iniciando autenticación, intenta de nuevo en un momento...','info');
+      toast('Preparando autenticación, intenta de nuevo en 3 segundos...','info');
       tryInitDrive();
     }
     return;
@@ -1631,8 +1627,11 @@ function eLbl(e){return{pendiente:'Pendiente',presentado:'Presentado',observado:
 async function init(){
   loadCfg();
   await initDB();
-  // Drive se inicia automáticamente vía onGapiLoad() y onGsiLoad()
-  // cuando los scripts externos terminan de cargar
+  // Registrar tryInitDrive como callback global
+  // Los scripts de Google del <head> llaman window._tryInitDrive cuando cargan
+  window._tryInitDrive = tryInitDrive;
+  // Si los scripts ya cargaron antes que este código corriera, lanzar ahora
+  if(window._gapiLoaded && window._gsiLoaded) tryInitDrive();
   navTo('dashboard');
 }
 init().catch(e=>{
